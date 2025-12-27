@@ -1,0 +1,19 @@
+{
+    "version": "0.2",
+    "language": "en",
+    "words": [
+        "codegen",
+        "jadkhaddad",
+        "pdus",
+        "rusmpp",
+        "rusmppc",
+        "rusmpps",
+        "rustls",
+        "serde",
+        "tungstenite"
+    ],
+    "ignorePaths": [
+        "target",
+        ".gitignore"
+    ]
+}

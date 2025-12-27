@@ -1,0 +1,15 @@
+services:
+  ws-tcp-proxy:
+    container_name: ws-tcp-proxy
+    image: jadkhaddad/ws-tcp-proxy:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:
+      - "--socket-addr"
+      - "0.0.0.0:7777"
+    environment:
+      - RUST_LOG=ws_tcp_proxy=debug
+    ports:
+      - "7777:7777"
+    restart: unless-stopped
