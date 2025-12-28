@@ -19,7 +19,10 @@ async fn main() -> anyhow::Result<()> {
         .with_env_filter("rusmppc=info")
         .init();
 
-    let url = "ws://localhost:7777/ws?ssl=true&domain=rusmpps.rusmpp.org&port=2776";
+    let url = "ws://proxy.rusmpp.org:7777/ws?ssl=true&domain=rusmpps.rusmpp.org&port=2776";
+
+    // or over tls
+    // let url = "wss://proxy.rusmpp.org:7776/ws?ssl=true&domain=rusmpps.rusmpp.org&port=2776";
 
     tracing::info!(%url, "Connecting to ws-tcp-proxy server");
 

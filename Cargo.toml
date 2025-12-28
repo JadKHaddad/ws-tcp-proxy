@@ -24,7 +24,7 @@ webpki-roots = "1.0.4"
 [dev-dependencies]
 rusmpp = { git = "https://github.com/Rusmpp/Rusmpp", branch = "main", package = "rusmpp" }
 rusmppc = { git = "https://github.com/Rusmpp/Rusmpp", branch = "main", package = "rusmppc" }
-tokio-tungstenite = "0.28.0"
+tokio-tungstenite = { version = "0.28.0", features = ["native-tls"] }
 
 [profile.release]
 codegen-units = 1

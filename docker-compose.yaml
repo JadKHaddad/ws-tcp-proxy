@@ -1,7 +1,7 @@
 services:
   ws-tcp-proxy:
     container_name: ws-tcp-proxy
-    image: jadkhaddad/ws-tcp-proxy:latest
+    image: jadkhaddad/ws-tcp-proxy:0.1.0
     build:
       context: .
       dockerfile: Dockerfile
@@ -13,3 +13,18 @@ services:
     ports:
       - "7777:7777"
     restart: unless-stopped
+
+  # <https://github.com/JadKHaddad/upstream/tree/0.1.0>
+  upstream:
+    container_name: ws-tcp-proxy-upstream
+    image: jadkhaddad/upstream:0.1.0
+    command:
+      - "--config-file"
+      - "/etc/upstream/config.yaml"
+    ports:
+      - "7776:7776"
+    restart: unless-stopped
+    volumes:
+      - ./upstream-config.yaml:/etc/upstream/config.yaml:ro
+      - /opt/caddy/mnt/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/proxy.rusmpp.org/proxy.rusmpp.org.crt:/etc/upstream/cert.pem:ro
+      - /opt/caddy/mnt/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/proxy.rusmpp.org/proxy.rusmpp.org.key:/etc/upstream/key.pem:ro

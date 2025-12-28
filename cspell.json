@@ -4,13 +4,15 @@
     "words": [
         "codegen",
         "jadkhaddad",
+        "letsencrypt",
         "pdus",
         "rusmpp",
         "rusmppc",
         "rusmpps",
         "rustls",
         "serde",
-        "tungstenite"
+        "tungstenite",
+        "webpki"
     ],
     "ignorePaths": [
         "target",
