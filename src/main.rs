@@ -6,11 +6,11 @@ use std::{
 
 use axum::{
     Router,
-    extract::{Query, State, WebSocketUpgrade},
-    http::StatusCode,
+    extract::{Query, State, WebSocketUpgrade, ws::Message},
     response::IntoResponse,
     routing::get,
 };
+use bytes::Bytes;
 use clap::Parser;
 use hickory_resolver::TokioResolver;
 use tokio::{
@@ -47,7 +47,7 @@ async fn ws(
     params: Query<QueryParams>,
     upgrade: WebSocketUpgrade,
     state: State<Arc<AppState>>,
-) -> Result<impl IntoResponse, (StatusCode, String)> {
+) -> impl IntoResponse {
     let id = state.next_connection_id();
 
     tracing::info!(id, params=?params.0, "New WebSocket connection");
@@ -55,13 +55,32 @@ async fn ws(
     let socket = state
         .connect(id, params.domain.as_str(), params.port, params.ssl)
         .await
-        .map_err(|err| {
+        .inspect_err(|err| {
             tracing::error!(%err, "Failed to connect to upstream TCP server");
+        });
 
-            (StatusCode::BAD_GATEWAY, err.to_string())
-        })?;
+    upgrade.on_upgrade(move |mut ws| async move {
+        match socket {
+            Ok(socket) => {
+                let bytes = serde_json::to_vec(&UpstreamResult::ok()).unwrap_or_default();
 
-    Ok(upgrade.on_upgrade(move |ws| proxy(id, ws.into_async_read_write(), socket)))
+                if let Err(err) = ws.send(Message::Binary(Bytes::from(bytes))).await {
+                    tracing::error!(%err, "Failed to send upstream result");
+                    return;
+                }
+
+                proxy(id, ws.into_async_read_write(), socket).await;
+            }
+            Err(err) => {
+                let bytes =
+                    serde_json::to_vec(&UpstreamResult::err(err.to_string())).unwrap_or_default();
+
+                if let Err(err) = ws.send(Message::Binary(Bytes::from(bytes))).await {
+                    tracing::error!(%err, "Failed to send upstream result");
+                }
+            }
+        }
+    })
 }
 
 #[tracing::instrument(skip(a, b))]
@@ -136,4 +155,19 @@ struct QueryParams {
     domain: String,
     port: u16,
     ssl: bool,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct UpstreamResult {
+    error: Option<String>,
+}
+
+impl UpstreamResult {
+    fn ok() -> Self {
+        Self { error: None }
+    }
+
+    fn err(err: String) -> Self {
+        Self { error: Some(err) }
+    }
 }
