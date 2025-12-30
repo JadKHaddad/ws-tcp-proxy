@@ -8,4 +8,4 @@ FROM scratch
 COPY --from=builder /usr/src/ws-tcp-proxy/target/x86_64-unknown-linux-musl/release/ws-tcp-proxy /ws-tcp-proxy
 ENTRYPOINT ["/ws-tcp-proxy"]
 
-# docker build -t jadkhaddad/ws-tcp-proxy:latest .
+# docker build -t jadkhaddad/ws-tcp-proxy:0.2.0 .

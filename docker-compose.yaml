@@ -1,7 +1,7 @@
 services:
   ws-tcp-proxy:
     container_name: ws-tcp-proxy
-    image: jadkhaddad/ws-tcp-proxy:0.1.0
+    image: jadkhaddad/ws-tcp-proxy:0.2.0
     build:
       context: .
       dockerfile: Dockerfile
