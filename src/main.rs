@@ -13,10 +13,12 @@ use axum::{
 use bytes::Bytes;
 use clap::Parser;
 use hickory_resolver::TokioResolver;
+use rustls::ServerConfig;
 use tokio::{
     io::{AsyncRead, AsyncWrite},
     net::{TcpListener, TcpStream},
 };
+use tokio_rustls_acme::{AcmeConfig, caches::DirCache};
 use tracing_subscriber::EnvFilter;
 use ws_tcp_proxy::{Args, MaybeTlsStream, WebSocketExt};
 
@@ -34,12 +36,27 @@ async fn main() -> anyhow::Result<()> {
     let state = Arc::new(AppState::new()?);
     let app = Router::new().route("/ws", get(ws)).with_state(state);
 
-    tracing::info!(%addr, "listening");
+    // tracing::info!(%addr, "listening");
 
-    let listener = TcpListener::bind(addr).await?;
+    // let listener = TcpListener::bind(addr).await?;
 
-    axum::serve(listener, app).await?;
+    // axum::serve(listener, app).await?;
 
+    let mut state = AcmeConfig::new(Vec::<String>::new())
+        .contact(Vec::<String>::new())
+        .cache(DirCache::new("./rustls_acme_cache"))
+        .directory_lets_encrypt(true)
+        .state();
+    let rustls_config = ServerConfig::builder()
+        .with_no_client_auth()
+        .with_cert_resolver(state.resolver());
+    let acceptor = state.axum_acceptor(Arc::new(rustls_config));
+
+    axum_server::bind(addr)
+        .acceptor(acceptor)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
     Ok(())
 }
 
